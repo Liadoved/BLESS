@@ -11,9 +11,7 @@ const config = {
   clientId: process.env.GOOGLE_CLIENT_ID!,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
   jwtSecret: process.env.JWT_SECRET || 'your-jwt-secret',
-  redirectUri: isProd
-    ? 'https://bless-eosin.vercel.app/api/auth/callback'
-    : 'http://localhost:3002/api/auth/callback',
+  redirectUri: 'https://bless-eosin.vercel.app/api/auth/callback',
   scopes: [
     'https://www.googleapis.com/auth/userinfo.profile',
     'https://www.googleapis.com/auth/userinfo.email',
