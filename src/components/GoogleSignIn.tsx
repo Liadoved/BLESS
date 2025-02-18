@@ -8,19 +8,44 @@ export default function GoogleSignIn() {
 
   const signInWithGoogle = async () => {
     try {
+      console.log('Starting Google sign in...');
+      console.log('Auth object:', auth);
+      
+      if (!auth) {
+        throw new Error('Auth is not initialized');
+      }
+
+      console.log('Calling signInWithPopup...');
       const result = await signInWithPopup(auth, provider);
+      
+      console.log('Sign in successful, getting user...');
       const user = result.user;
       
       // Get the Google Access Token
+      console.log('Getting credentials...');
       const credential = GoogleAuthProvider.credentialFromResult(result);
       const token = credential?.accessToken;
 
-      console.log('Successfully signed in:', user.email);
+      console.log('Successfully signed in:', { 
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+        hasToken: !!token
+      });
       
       // Redirect to home page after successful sign in
+      console.log('Redirecting to home page...');
       router.push('/');
-    } catch (error) {
-      console.error('Error signing in with Google:', error);
+    } catch (error: any) {
+      console.error('Error signing in with Google:', {
+        code: error.code,
+        message: error.message,
+        email: error.email,
+        credential: error.credential
+      });
+      
+      // Show error message to user
+      alert(`התחברות נכשלה: ${error.message}`);
     }
   };
 
