@@ -1,7 +1,5 @@
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { initializeApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -13,10 +11,8 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
-// Initialize Firebase
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// Initialize Firebase only if it hasn't been initialized yet
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
 const auth = getAuth(app);
-const storage = getStorage(app);
 
-export { app, db, auth, storage };
+export { app, auth };
