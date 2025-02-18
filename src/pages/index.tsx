@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '../lib/firebase';
 import { Project, UserSession } from '../types';
-import { useGoogleAuth } from '../hooks/useGoogleAuth';
 
 export default function Home() {
+  const [user, loading] = useAuthState(auth);
   const router = useRouter();
-  const { user, signIn } = useGoogleAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [projectData, setProjectData] = useState({
     celebrantName: '',
@@ -41,9 +42,17 @@ export default function Home() {
 
   useEffect(() => {
     if (!user) {
-      router.push('/landing');
+      router.push('/login');
     }
   }, [user, router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   if (!user) {
     return null;
