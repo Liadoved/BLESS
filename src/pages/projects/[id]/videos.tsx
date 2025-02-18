@@ -80,9 +80,17 @@ export default function ProjectVideos() {
         if (videoIndex !== -1) {
           newVideos[videoIndex] = {
             ...newVideos[videoIndex],
-            file: trimmedFile,
-            url: fileUrl
+            driveFileId: fileUrl
           };
+        } else {
+          // אם הוידאו לא קיים, נוסיף אותו
+          newVideos.push({
+            id: currentVideo.id,
+            questionId: currentVideo.questionId,
+            driveFileId: fileUrl,
+            status: 'uploaded',
+            uploadedAt: new Date()
+          });
         }
         return newVideos;
       });
