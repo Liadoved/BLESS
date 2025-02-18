@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { google } from 'googleapis';
-import formidable from 'formidable';
+import { IncomingForm, File as FormidableFile } from 'formidable';
 import fs from 'fs';
 
 // הגדרת formidable לא לשמור קבצים בדיסק
@@ -20,23 +20,35 @@ const auth = new google.auth.GoogleAuth({
   scopes: SCOPES,
 });
 
+interface FormFields {
+  folderId: string;
+  fileName: string;
+}
+
+interface FormFiles {
+  file: FormidableFile;
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
   try {
-    const form = new formidable.IncomingForm();
-    const { fields, files } = await new Promise((resolve, reject) => {
+    const form = new IncomingForm();
+    const { fields, files } = await new Promise<{ fields: FormFields; files: FormFiles }>((resolve, reject) => {
       form.parse(req, (err, fields, files) => {
         if (err) reject(err);
-        resolve({ fields, files });
+        resolve({
+          fields: fields as unknown as FormFields,
+          files: files as unknown as FormFiles
+        });
       });
     });
 
-    const file = files.file as formidable.File;
-    const folderId = fields.folderId as string;
-    const fileName = fields.fileName as string;
+    const file = files.file;
+    const folderId = fields.folderId;
+    const fileName = fields.fileName;
 
     const drive = google.drive({ version: 'v3', auth });
 
@@ -52,9 +64,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
     });
 
+    if (!response.data.id) {
+      throw new Error('Failed to get file ID from Google Drive');
+    }
+
     // הגדרת הרשאות צפייה
     await drive.permissions.create({
-      fileId: response.data.id!,
+      fileId: response.data.id,
       requestBody: {
         role: 'reader',
         type: 'anyone',
@@ -63,7 +79,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // קבלת URL לצפייה
     const fileData = await drive.files.get({
-      fileId: response.data.id!,
+      fileId: response.data.id,
       fields: 'webViewLink',
     });
 
