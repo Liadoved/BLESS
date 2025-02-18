@@ -1,32 +1,37 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { OAuth2Client } from 'google-auth-library';
-import { serialize, parse } from 'cookie';
+import { serialize } from 'cookie';
 import jwt from 'jsonwebtoken';
 
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
-const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
-const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret';
-const REDIRECT_URI = process.env.NODE_ENV === 'production' 
-  ? 'https://bless-eosin.vercel.app/api/auth/callback'
-  : 'http://localhost:3002/api/auth/callback';
+// Check if we're in production
+const isProd = process.env.NODE_ENV === 'production';
 
+// Configuration
+const config = {
+  clientId: process.env.GOOGLE_CLIENT_ID!,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+  jwtSecret: process.env.JWT_SECRET || 'your-jwt-secret',
+  redirectUri: isProd
+    ? 'https://bless-eosin.vercel.app/api/auth/callback'
+    : 'http://localhost:3002/api/auth/callback',
+  scopes: [
+    'https://www.googleapis.com/auth/userinfo.profile',
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/drive.file'
+  ]
+};
+
+// Initialize OAuth client
 const client = new OAuth2Client({
-  clientId: GOOGLE_CLIENT_ID,
-  clientSecret: GOOGLE_CLIENT_SECRET,
-  redirectUri: REDIRECT_URI
+  clientId: config.clientId,
+  clientSecret: config.clientSecret,
+  redirectUri: config.redirectUri
 });
-
-// הגדרת הרשאות Google
-const SCOPES = [
-  'https://www.googleapis.com/auth/userinfo.profile',
-  'https://www.googleapis.com/auth/userinfo.email',
-  'https://www.googleapis.com/auth/drive.file'
-];
 
 export async function getGoogleAuthUrl() {
   return client.generateAuthUrl({
     access_type: 'offline',
-    scope: SCOPES,
+    scope: config.scopes,
     include_granted_scopes: true,
     prompt: 'consent'
   });
@@ -34,17 +39,20 @@ export async function getGoogleAuthUrl() {
 
 export async function handleGoogleCallback(code: string, req: NextApiRequest, res: NextApiResponse) {
   try {
+    // Exchange code for tokens
     const { tokens } = await client.getToken(code);
     client.setCredentials(tokens);
 
+    // Verify ID token
     const ticket = await client.verifyIdToken({
       idToken: tokens.id_token!,
-      audience: GOOGLE_CLIENT_ID
+      audience: config.clientId
     });
 
     const payload = ticket.getPayload();
     if (!payload) throw new Error('No payload');
 
+    // Create user object
     const user = {
       id: payload.sub,
       email: payload.email,
@@ -54,11 +62,13 @@ export async function handleGoogleCallback(code: string, req: NextApiRequest, re
       refreshToken: tokens.refresh_token
     };
 
-    const session = jwt.sign(user, JWT_SECRET);
+    // Create session
+    const session = jwt.sign(user, config.jwtSecret);
 
+    // Set cookie
     res.setHeader('Set-Cookie', serialize('session', session, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isProd,
       sameSite: 'lax',
       path: '/',
       maxAge: 60 * 60 * 24 * 7 // 1 week
@@ -75,7 +85,7 @@ export async function getSession(req: NextApiRequest) {
   if (!cookie) return null;
 
   try {
-    return jwt.verify(cookie, JWT_SECRET);
+    return jwt.verify(cookie, config.jwtSecret);
   } catch {
     return null;
   }
@@ -84,7 +94,7 @@ export async function getSession(req: NextApiRequest) {
 export async function clearSession(req: NextApiRequest, res: NextApiResponse) {
   res.setHeader('Set-Cookie', serialize('session', '', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: isProd,
     sameSite: 'lax',
     path: '/',
     maxAge: 0
