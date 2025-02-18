@@ -41,7 +41,7 @@ export class GoogleFormsAPI {
               fileUploadQuestion: {
                 types: ['video/mp4'],
                 maxFiles: 1,
-                maxFileSize: 100 * 1024 * 1024 // 100MB
+                maxFileSize: '104857600' // 100MB in string format
               }
             }
           }
