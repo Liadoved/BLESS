@@ -99,11 +99,12 @@ export class GoogleFormsAPI {
 
     return (response.data.responses || []).map(resp => {
       const answers = resp.answers || {};
+      const defaultFile = null as unknown as File;
       return {
-        videoFile: answers['0']?.fileUploadAnswers?.answers[0] as unknown as File,
-        startTime: Number(answers['1']?.textAnswers?.answers[0]?.value || 0),
-        endTime: Number(answers['2']?.textAnswers?.answers[0]?.value || 0),
-        email: answers['3']?.textAnswers?.answers[0]?.value || ''
+        videoFile: (answers['0']?.fileUploadAnswers?.answers?.[0] || defaultFile) as File,
+        startTime: Number(answers['1']?.textAnswers?.answers?.[0]?.value || 0),
+        endTime: Number(answers['2']?.textAnswers?.answers?.[0]?.value || 0),
+        email: answers['3']?.textAnswers?.answers?.[0]?.value || ''
       };
     });
   }
@@ -123,11 +124,12 @@ export class GoogleFormsAPI {
       if (response.data.responses) {
         for (const resp of response.data.responses) {
           const answers = resp.answers || {};
+          const defaultFile = null as unknown as File;
           callback({
-            videoFile: answers['0']?.fileUploadAnswers?.answers[0] as unknown as File,
-            startTime: Number(answers['1']?.textAnswers?.answers[0]?.value || 0),
-            endTime: Number(answers['2']?.textAnswers?.answers[0]?.value || 0),
-            email: answers['3']?.textAnswers?.answers[0]?.value || ''
+            videoFile: (answers['0']?.fileUploadAnswers?.answers?.[0] || defaultFile) as File,
+            startTime: Number(answers['1']?.textAnswers?.answers?.[0]?.value || 0),
+            endTime: Number(answers['2']?.textAnswers?.answers?.[0]?.value || 0),
+            email: answers['3']?.textAnswers?.answers?.[0]?.value || ''
           });
         }
       }
