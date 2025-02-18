@@ -10,7 +10,7 @@ export default function ProjectVideos() {
   const [questions, setQuestions] = useState<VideoQuestion[]>([]);
   const [videos, setVideos] = useState<ContactVideo[]>([]);
   const [showTrimmer, setShowTrimmer] = useState(false);
-  const [currentVideo, setCurrentVideo] = useState<{ file: File, questionId: string } | null>(null);
+  const [currentVideo, setCurrentVideo] = useState<{ id: string, file: File, questionId: string } | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -41,7 +41,9 @@ export default function ProjectVideos() {
   };
 
   const handleVideoUpload = async (questionId: string, file: File) => {
-    setCurrentVideo({ file, questionId });
+    // יצירת מזהה ייחודי לוידאו
+    const videoId = `${questionId}_${Date.now()}`;
+    setCurrentVideo({ id: videoId, file, questionId });
     setShowTrimmer(true);
   };
 
