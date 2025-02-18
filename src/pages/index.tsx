@@ -21,20 +21,31 @@ export default function Home() {
     setIsLoading(true);
     
     try {
-      // יצירת תיקיות בדרייב
+      // Get the current user's ID token
+      const idToken = await user?.getIdToken();
+      if (!idToken) {
+        throw new Error('No auth token available');
+      }
+
+      // Create the project
       const response = await fetch('/api/projects/create', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
         },
         body: JSON.stringify(projectData)
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to create project');
+      }
 
       const project = await response.json();
       router.push(`/projects/${project.id}/dashboard`);
     } catch (error) {
       console.error('Failed to create project:', error);
-      // להוסיף הודעת שגיאה למשתמש
+      alert('Failed to create project. Please try again.');
     } finally {
       setIsLoading(false);
     }
