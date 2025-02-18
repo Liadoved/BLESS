@@ -1,4 +1,5 @@
 import { google } from 'googleapis';
+import { forms_v1 } from 'googleapis/build/src/apis/forms';
 
 export interface FormResponse {
   videoFile: File;
@@ -27,7 +28,7 @@ export class GoogleFormsAPI {
   async createForm() {
     const forms = google.forms({ version: 'v1', auth: this.auth });
     
-    const form = {
+    const form: forms_v1.Schema$Form = {
       info: {
         title: 'עריכת וידאו',
         documentTitle: 'טופס עריכת וידאו'
@@ -39,9 +40,9 @@ export class GoogleFormsAPI {
             question: {
               required: true,
               fileUploadQuestion: {
-                types: ['video/mp4'],
+                type: ['video/mp4'],
                 maxFiles: 1,
-                maxFileSize: '104857600' // 100MB in string format
+                maxFileSize: '104857600'
               }
             }
           }
@@ -52,7 +53,7 @@ export class GoogleFormsAPI {
             question: {
               required: true,
               textQuestion: {
-                type: 'NUMBER'
+                paragraph: false
               }
             }
           }
@@ -63,7 +64,7 @@ export class GoogleFormsAPI {
             question: {
               required: true,
               textQuestion: {
-                type: 'NUMBER'
+                paragraph: false
               }
             }
           }
@@ -74,7 +75,7 @@ export class GoogleFormsAPI {
             question: {
               required: true,
               textQuestion: {
-                type: 'EMAIL'
+                paragraph: false
               }
             }
           }
@@ -99,10 +100,10 @@ export class GoogleFormsAPI {
     return (response.data.responses || []).map(resp => {
       const answers = resp.answers || {};
       return {
-        videoFile: answers['0'].fileUploadAnswer?.fileId || '',
-        startTime: Number(answers['1'].textAnswer?.value || '0'),
-        endTime: Number(answers['2'].textAnswer?.value || '0'),
-        email: answers['3'].textAnswer?.value || ''
+        videoFile: answers['0']?.fileUploadAnswer?.files[0] as unknown as File,
+        startTime: Number(answers['1']?.textAnswers?.answers[0]?.value || 0),
+        endTime: Number(answers['2']?.textAnswers?.answers[0]?.value || 0),
+        email: answers['3']?.textAnswers?.answers[0]?.value || ''
       };
     });
   }
@@ -123,10 +124,10 @@ export class GoogleFormsAPI {
         for (const resp of response.data.responses) {
           const answers = resp.answers || {};
           callback({
-            videoFile: answers['0'].fileUploadAnswer?.fileId || '',
-            startTime: Number(answers['1'].textAnswer?.value || '0'),
-            endTime: Number(answers['2'].textAnswer?.value || '0'),
-            email: answers['3'].textAnswer?.value || ''
+            videoFile: answers['0']?.fileUploadAnswer?.files[0] as unknown as File,
+            startTime: Number(answers['1']?.textAnswers?.answers[0]?.value || 0),
+            endTime: Number(answers['2']?.textAnswers?.answers[0]?.value || 0),
+            email: answers['3']?.textAnswers?.answers[0]?.value || ''
           });
         }
       }
