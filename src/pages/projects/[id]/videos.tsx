@@ -45,25 +45,49 @@ export default function ProjectVideos() {
     setShowTrimmer(true);
   };
 
-  const handleTrimComplete = async (trimmedFile: File) => {
+  const handleTrimComplete = async (trimmedVideo: Blob) => {
     if (!currentVideo) return;
 
-    const formData = new FormData();
-    formData.append('video', trimmedFile);
-    formData.append('questionId', currentVideo.questionId);
+    // המרת ה-Blob ל-File
+    const trimmedFile = new File([trimmedVideo], currentVideo.file.name, {
+      type: trimmedVideo.type
+    });
 
     try {
-      const response = await fetch(`/api/projects/${id}/videos/upload`, {
+      // העלאת הקובץ החתוך
+      const formData = new FormData();
+      formData.append('file', trimmedFile);
+      formData.append('folderId', process.env.NEXT_PUBLIC_GOOGLE_DRIVE_FOLDER_ID || '');
+      formData.append('fileName', `trimmed_${currentVideo.file.name}`);
+
+      const response = await fetch('/api/upload-to-drive', {
         method: 'POST',
-        body: formData
+        body: formData,
       });
 
-      const video = await response.json();
-      setVideos([...videos, video]);
+      if (!response.ok) {
+        throw new Error('Failed to upload trimmed video');
+      }
+
+      const { fileUrl } = await response.json();
+
+      // עדכון הסרטון בממשק המשתמש
+      setVideos(prevVideos => {
+        const newVideos = [...prevVideos];
+        const videoIndex = newVideos.findIndex(v => v.id === currentVideo.id);
+        if (videoIndex !== -1) {
+          newVideos[videoIndex] = {
+            ...newVideos[videoIndex],
+            file: trimmedFile,
+            url: fileUrl
+          };
+        }
+        return newVideos;
+      });
+
       setShowTrimmer(false);
-      setCurrentVideo(null);
     } catch (error) {
-      console.error('Failed to upload video:', error);
+      console.error('Failed to handle trimmed video:', error);
     }
   };
 
