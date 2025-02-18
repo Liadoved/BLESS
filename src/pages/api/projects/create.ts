@@ -1,22 +1,27 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { addDoc, collection } from 'firebase/firestore';
-import { auth, db } from '../../../lib/firebase';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
+import { getFirestore } from 'firebase-admin/firestore';
 
-// Helper function to ensure auth is initialized
-const getAuth = () => {
-  if (!auth) {
-    throw new Error('Auth is not initialized');
+// Initialize Firebase Admin if it hasn't been initialized yet
+if (!getApps().length) {
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+  if (!privateKey) {
+    throw new Error('FIREBASE_PRIVATE_KEY is not set');
   }
-  return auth;
-};
 
-// Helper function to ensure db is initialized
-const getDB = () => {
-  if (!db) {
-    throw new Error('Firestore is not initialized');
-  }
-  return db;
-};
+  const app = initializeApp({
+    credential: cert({
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      // Convert escaped newlines to actual newlines
+      privateKey: privateKey.replace(/\\n/g, '\n')
+    })
+  });
+}
+
+const adminAuth = getAuth();
+const adminDb = getFirestore();
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   console.log('Received request to create project');
@@ -40,7 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     console.log('Verifying token...');
     // Verify the ID token
-    const decodedToken = await getAuth().verifyIdToken(idToken);
+    const decodedToken = await adminAuth.verifyIdToken(idToken);
     const userId = decodedToken.uid;
     console.log('Token verified for user:', userId);
 
@@ -50,7 +55,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     console.log('Creating project in Firestore...');
     // Add the project to Firestore
-    const docRef = await addDoc(collection(getDB(), 'projects'), {
+    const docRef = await adminDb.collection('projects').add({
       ...projectData,
       managerId: userId,
       createdAt: new Date().toISOString(),
