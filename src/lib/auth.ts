@@ -10,7 +10,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret';
 const client = new OAuth2Client(
   GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET,
-  'http://localhost:3002/api/auth/callback'
+  `${process.env.NEXT_PUBLIC_API_URL}/api/auth/callback`
 );
 
 // הגדרת הרשאות Google
