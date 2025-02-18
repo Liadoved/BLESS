@@ -100,7 +100,7 @@ export class GoogleFormsAPI {
     return (response.data.responses || []).map(resp => {
       const answers = resp.answers || {};
       return {
-        videoFile: answers['0']?.fileUploadAnswers?.files[0] as unknown as File,
+        videoFile: answers['0']?.fileUploadAnswers?.answers[0] as unknown as File,
         startTime: Number(answers['1']?.textAnswers?.answers[0]?.value || 0),
         endTime: Number(answers['2']?.textAnswers?.answers[0]?.value || 0),
         email: answers['3']?.textAnswers?.answers[0]?.value || ''
@@ -124,7 +124,7 @@ export class GoogleFormsAPI {
         for (const resp of response.data.responses) {
           const answers = resp.answers || {};
           callback({
-            videoFile: answers['0']?.fileUploadAnswers?.files[0] as unknown as File,
+            videoFile: answers['0']?.fileUploadAnswers?.answers[0] as unknown as File,
             startTime: Number(answers['1']?.textAnswers?.answers[0]?.value || 0),
             endTime: Number(answers['2']?.textAnswers?.answers[0]?.value || 0),
             email: answers['3']?.textAnswers?.answers[0]?.value || ''
