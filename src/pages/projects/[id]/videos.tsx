@@ -87,7 +87,10 @@ export default function ProjectVideos() {
           newVideos.push({
             id: currentVideo.id,
             questionId: currentVideo.questionId,
-            driveFileId: fileUrl
+            driveFileId: fileUrl,
+            uploadedAt: new Date(),
+            duration: 0, // נעדכן את זה כשנקבל את המידע מהשרת
+            thumbnailUrl: '' // נעדכן את זה כשנקבל את המידע מהשרת
           });
         }
         return newVideos;
