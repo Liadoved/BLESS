@@ -87,8 +87,8 @@ export async function clearSession(req: NextApiRequest, res: NextApiResponse) {
 
 export async function refreshGoogleToken(refreshToken: string) {
   try {
-    const { credentials } = await client.refreshToken(refreshToken);
-    return credentials.access_token;
+    const response = await client.refreshToken(refreshToken);
+    return response.tokens.access_token;
   } catch (error) {
     console.error('Failed to refresh token:', error);
     throw error;
