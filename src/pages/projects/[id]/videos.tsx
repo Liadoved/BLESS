@@ -87,9 +87,7 @@ export default function ProjectVideos() {
           newVideos.push({
             id: currentVideo.id,
             questionId: currentVideo.questionId,
-            driveFileId: fileUrl,
-            status: 'uploaded',
-            uploadedAt: new Date()
+            driveFileId: fileUrl
           });
         }
         return newVideos;
