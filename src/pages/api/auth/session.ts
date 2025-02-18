@@ -1,23 +1,28 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { auth } from '../../../lib/firebase';
 
+// Helper function to ensure auth is initialized
+const getAuth = () => {
+  if (!auth) {
+    throw new Error('Auth is not initialized');
+  }
+  return auth;
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
-    return res.status(405).json({ message: 'Method not allowed' });
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const idToken = req.headers.authorization?.split('Bearer ')[1];
+  if (!idToken) {
+    return res.status(401).json({ error: 'No token provided' });
   }
 
   try {
-    // Get the current user's ID token from the Authorization header
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ message: 'No token provided' });
-    }
-
-    const idToken = authHeader.split('Bearer ')[1];
-    
     // Verify the ID token
-    const decodedToken = await auth.verifyIdToken(idToken);
-    
+    const decodedToken = await getAuth().verifyIdToken(idToken);
+
     // Return the user information
     return res.status(200).json({
       user: {
@@ -27,8 +32,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         picture: decodedToken.picture
       }
     });
-  } catch (error) {
-    console.error('Session error:', error);
-    return res.status(401).json({ message: 'Invalid token' });
+  } catch (error: any) {
+    console.error('Error verifying token:', error);
+    return res.status(401).json({ error: 'Invalid token' });
   }
 }
