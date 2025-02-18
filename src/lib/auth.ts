@@ -91,7 +91,10 @@ export async function clearSession(req: NextApiRequest, res: NextApiResponse) {
 
 export async function refreshGoogleToken(refreshToken: string) {
   try {
-    const { credentials } = await client.refreshToken(refreshToken);
+    client.setCredentials({
+      refresh_token: refreshToken
+    });
+    const { credentials } = await client.refreshAccessToken();
     return credentials.access_token;
   } catch (error) {
     console.error('Token refresh error:', error);
