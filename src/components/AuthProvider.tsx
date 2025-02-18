@@ -13,8 +13,8 @@ export default function AuthProvider({ children }: AuthProviderProps) {
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
   
-  // Only use auth on client side
-  const [user, loading] = typeof window !== 'undefined' ? useAuthState(auth) : [null, true];
+  // Only use auth on client side and when auth is defined
+  const [user, loading] = typeof window !== 'undefined' && auth ? useAuthState(auth) : [null, true];
 
   useEffect(() => {
     setMounted(true);
