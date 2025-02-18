@@ -40,7 +40,7 @@ export class GoogleFormsAPI {
             question: {
               required: true,
               fileUploadQuestion: {
-                type: ['video/mp4'],
+                types: ['video/mp4'],
                 maxFiles: 1,
                 maxFileSize: '104857600'
               }
