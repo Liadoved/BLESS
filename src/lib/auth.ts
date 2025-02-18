@@ -6,7 +6,9 @@ import jwt from 'jsonwebtoken';
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret';
-const REDIRECT_URI = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/callback`;
+const REDIRECT_URI = process.env.NODE_ENV === 'production' 
+  ? 'https://bless-eosin.vercel.app/api/auth/callback'
+  : 'http://localhost:3002/api/auth/callback';
 
 const client = new OAuth2Client({
   clientId: GOOGLE_CLIENT_ID,
