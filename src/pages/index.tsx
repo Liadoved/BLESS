@@ -21,12 +21,15 @@ export default function Home() {
     setIsLoading(true);
     
     try {
+      console.log('Getting ID token...');
       // Get the current user's ID token
       const idToken = await user?.getIdToken();
       if (!idToken) {
         throw new Error('No auth token available');
       }
+      console.log('Got ID token');
 
+      console.log('Creating project...', projectData);
       // Create the project
       const response = await fetch('/api/projects/create', {
         method: 'POST',
@@ -38,14 +41,21 @@ export default function Home() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create project');
+        const errorData = await response.json();
+        throw new Error(errorData.details || 'Failed to create project');
       }
 
+      console.log('Project created successfully');
       const project = await response.json();
+      console.log('Redirecting to dashboard...');
       router.push(`/projects/${project.id}/dashboard`);
-    } catch (error) {
-      console.error('Failed to create project:', error);
-      alert('Failed to create project. Please try again.');
+    } catch (error: any) {
+      console.error('Failed to create project:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
+      alert(`Failed to create project: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
