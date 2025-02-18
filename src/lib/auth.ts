@@ -29,18 +29,26 @@ const client = new OAuth2Client({
 });
 
 export async function getGoogleAuthUrl() {
+  console.log('Redirect URI:', config.redirectUri);
   return client.generateAuthUrl({
     access_type: 'offline',
     scope: config.scopes,
     include_granted_scopes: true,
-    prompt: 'consent'
+    prompt: 'consent',
+    redirect_uri: config.redirectUri
   });
 }
 
 export async function handleGoogleCallback(code: string, req: NextApiRequest, res: NextApiResponse) {
   try {
+    console.log('Callback received with code:', code);
+    console.log('Using redirect URI:', config.redirectUri);
+    
     // Exchange code for tokens
-    const { tokens } = await client.getToken(code);
+    const { tokens } = await client.getToken({
+      code,
+      redirect_uri: config.redirectUri
+    });
     client.setCredentials(tokens);
 
     // Verify ID token
