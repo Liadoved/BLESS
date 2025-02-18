@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../lib/firebase';
@@ -10,16 +10,28 @@ interface AuthProviderProps {
 const publicPaths = ['/login', '/privacy', '/terms'];
 
 export default function AuthProvider({ children }: AuthProviderProps) {
-  const [user, loading] = useAuthState(auth);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
+  
+  // Only use auth on client side
+  const [user, loading] = typeof window !== 'undefined' ? useAuthState(auth) : [null, true];
 
   useEffect(() => {
-    if (!loading) {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted && !loading) {
       if (!user && !publicPaths.includes(router.pathname)) {
         router.push('/login');
       }
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, mounted]);
+
+  // Don't render anything on server side
+  if (!mounted) {
+    return null;
+  }
 
   if (loading) {
     return (
