@@ -32,15 +32,41 @@ export default function Home() {
       console.log('Got ID token');
 
       console.log('Creating project...', projectData);
-      // Create the project
-      const response = await fetch('/api/projects/new', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${idToken}`
-        },
-        body: JSON.stringify(projectData)
-      });
+      // Try the new API endpoint first, then fall back to the old one if it fails
+      let response;
+      try {
+        response = await fetch('/api/projects/new', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`
+          },
+          body: JSON.stringify(projectData)
+        });
+        
+        // If we got a 405 error, try the old endpoint
+        if (response.status === 405) {
+          console.log('New API endpoint returned 405, trying old endpoint...');
+          response = await fetch('/api/projects/create', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${idToken}`
+            },
+            body: JSON.stringify(projectData)
+          });
+        }
+      } catch (error) {
+        console.error('Error with new API, trying old endpoint...', error);
+        response = await fetch('/api/projects/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`
+          },
+          body: JSON.stringify(projectData)
+        });
+      }
 
       if (!response.ok) {
         let errorMessage = 'Failed to create project';
