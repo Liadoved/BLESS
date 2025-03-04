@@ -30,8 +30,9 @@ export default function ProjectImages() {
       const response = await fetch(`/api/projects/${id}/images`);
       const data = await response.json();
       setImages(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch images:', error);
+      alert(error?.message || 'Failed to fetch images');
     }
   };
 
@@ -55,8 +56,9 @@ export default function ProjectImages() {
       });
       const newImages = await response.json();
       setImages([...images, ...newImages]);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to upload images:', error);
+      alert(error?.message || 'Failed to upload images');
     } finally {
       setIsUploading(false);
     }
@@ -79,8 +81,9 @@ export default function ProjectImages() {
         },
         body: JSON.stringify({ images: items })
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to reorder images:', error);
+      alert(error?.message || 'Failed to reorder images');
     }
   };
 
