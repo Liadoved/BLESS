@@ -5,13 +5,14 @@ import ReactPlayer from 'react-player';
 import { ScissorsIcon } from "@heroicons/react/24/outline";
 import { VideoThumbnails } from "./VideoThumbnails";
 
-interface VideoTrimmerProps {
+export interface VideoTrimmerProps {
   file: File | null;
-  onClose: () => void;
-  onSave: (trimmedVideo: Blob) => void;
+  onClose?: () => void;
+  onSave?: (trimmedVideo: Blob) => void;
+  onComplete?: (trimmedVideo: Blob) => Promise<void>;
 }
 
-export default function VideoTrimmer({ file, onClose, onSave }: VideoTrimmerProps) {
+export default function VideoTrimmer({ file, onClose, onSave, onComplete }: VideoTrimmerProps) {
   const [ready, setReady] = useState(false);
   const [videoSrc, setVideoSrc] = useState("");
   const [duration, setDuration] = useState(0);
@@ -66,8 +67,17 @@ export default function VideoTrimmer({ file, onClose, onSave }: VideoTrimmerProp
       const data = await ffmpeg.readFile("output.mp4");
       const trimmedVideo = new Blob([data], { type: "video/mp4" });
 
-      onSave(trimmedVideo);
-      onClose();
+      if (onSave) {
+        onSave(trimmedVideo);
+      }
+      
+      if (onComplete) {
+        await onComplete(trimmedVideo);
+      }
+      
+      if (onClose) {
+        onClose();
+      }
     } catch (error) {
       console.error("Error trimming video:", error);
     } finally {

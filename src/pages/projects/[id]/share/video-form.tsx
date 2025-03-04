@@ -437,7 +437,7 @@ export default function VideoForm() {
                   </h3>
                   <div className="mt-2">
                     <VideoTrimmer
-                      video={currentVideo.file}
+                      file={currentVideo.file}
                       onComplete={handleTrimComplete}
                     />
                   </div>
