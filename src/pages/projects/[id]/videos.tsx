@@ -377,7 +377,7 @@ export default function ProjectVideos() {
                       onChange={(e) => setCurrentVideo(prev => ({ ...prev!, description: e.target.value }))}
                     />
                     <VideoTrimmer
-                      video={currentVideo.file}
+                      file={currentVideo.file}
                       onComplete={handleTrimComplete}
                     />
                   </div>
