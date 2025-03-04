@@ -54,7 +54,17 @@ const adminAuth = getAuth();
 const adminDb = getFirestore();
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  console.log('Received request to create project');
+  console.log('Received request to create project, method:', req.method);
+  
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  // Handle OPTIONS method for CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
   
   if (req.method !== 'POST') {
     console.log('Invalid method:', req.method);
