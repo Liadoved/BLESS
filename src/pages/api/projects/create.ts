@@ -7,8 +7,25 @@ import { getFirestore } from 'firebase-admin/firestore';
 if (!getApps().length) {
   try {
     const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+    
+    console.log('Firebase Admin initialization params:', {
+      projectId: projectId || 'Missing',
+      clientEmail: clientEmail ? 'Present' : 'Missing',
+      privateKey: privateKey ? 'Present (length: ' + privateKey.length + ')' : 'Missing'
+    });
+    
     if (!privateKey) {
       throw new Error('FIREBASE_PRIVATE_KEY is not set');
+    }
+    
+    if (!clientEmail) {
+      throw new Error('FIREBASE_CLIENT_EMAIL is not set');
+    }
+    
+    if (!projectId) {
+      throw new Error('NEXT_PUBLIC_FIREBASE_PROJECT_ID is not set');
     }
 
     // Remove quotes and convert escaped newlines to actual newlines
@@ -20,15 +37,16 @@ if (!getApps().length) {
     console.log('Initializing Firebase Admin SDK...');
     initializeApp({
       credential: cert({
-        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        projectId: projectId,
+        clientEmail: clientEmail,
         privateKey: formattedKey
       })
     });
     console.log('Firebase Admin SDK initialized successfully');
-  } catch (error) {
-    console.error('Error initializing Firebase Admin:', error);
-    throw error;
+  } catch (error: any) {
+    console.error('Error initializing Firebase Admin:', error?.message || error);
+    // Don't throw the error, just log it and continue
+    // This allows the API to still respond with an error message instead of crashing
   }
 }
 
@@ -43,50 +61,58 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Get the current user's ID token from the Authorization header
-  const authHeader = req.headers.authorization;
-  console.log('Auth header:', authHeader ? 'Present' : 'Missing');
-  
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'No token provided' });
-  }
-
-  const idToken = authHeader.split('Bearer ')[1];
-  console.log('Got ID token');
-
   try {
-    console.log('Verifying token...');
-    // Verify the ID token
-    const decodedToken = await adminAuth.verifyIdToken(idToken);
-    const userId = decodedToken.uid;
-    console.log('Token verified for user:', userId);
+    // Get the current user's ID token from the Authorization header
+    const authHeader = req.headers.authorization;
+    console.log('Auth header:', authHeader ? 'Present' : 'Missing');
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
 
-    // Get the project data from the request body
-    const projectData = req.body;
-    console.log('Project data:', projectData);
-
-    console.log('Creating project in Firestore...');
-    // Add the project to Firestore
-    const docRef = await adminDb.collection('projects').add({
-      ...projectData,
-      managerId: userId,
-      createdAt: new Date().toISOString(),
-      status: 'active'
-    });
-    console.log('Project created with ID:', docRef.id);
-
-    // Return the new project ID
-    return res.status(200).json({ id: docRef.id });
+    const idToken = authHeader.split('Bearer ')[1];
+    
+    try {
+      // Verify the ID token
+      console.log('Verifying ID token...');
+      const decodedToken = await adminAuth.verifyIdToken(idToken);
+      console.log('ID token verified for user:', decodedToken.uid);
+      
+      const { celebrantName, celebrantGender, eventType, deadline, managerName } = req.body;
+      
+      // Validate the required fields
+      if (!celebrantName || !celebrantGender || !eventType) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
+      
+      // Create the project in Firestore
+      console.log('Creating project in Firestore...');
+      const projectRef = adminDb.collection('projects').doc();
+      const projectData = {
+        celebrantName,
+        celebrantGender,
+        eventType,
+        deadline: deadline || null,
+        managerName: managerName || null,
+        createdBy: decodedToken.uid,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      await projectRef.set(projectData);
+      console.log('Project created with ID:', projectRef.id);
+      
+      // Return the project data with the ID
+      return res.status(201).json({
+        id: projectRef.id,
+        ...projectData
+      });
+    } catch (error: any) {
+      console.error('Error verifying ID token:', error?.message || error);
+      return res.status(401).json({ error: 'Invalid token', details: error?.message });
+    }
   } catch (error: any) {
-    console.error('Error creating project:', {
-      name: error.name,
-      message: error.message,
-      code: error.code,
-      stack: error.stack
-    });
-    return res.status(500).json({ 
-      error: 'Failed to create project',
-      details: error.message 
-    });
+    console.error('Unexpected error in project creation:', error?.message || error);
+    return res.status(500).json({ error: 'Internal server error', details: error?.message });
   }
 }

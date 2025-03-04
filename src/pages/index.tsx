@@ -8,6 +8,7 @@ export default function Home() {
   const [user, loading] = useAuthState(auth);
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [projectData, setProjectData] = useState({
     celebrantName: '',
     celebrantGender: 'male',
@@ -19,6 +20,7 @@ export default function Home() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
     
     try {
       console.log('Getting ID token...');
@@ -41,8 +43,15 @@ export default function Home() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.details || 'Failed to create project');
+        let errorMessage = 'Failed to create project';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.details || errorMessage;
+        } catch (parseError) {
+          console.error('Error parsing error response:', parseError);
+          errorMessage = `Server error (${response.status}): ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
 
       console.log('Project created successfully');
@@ -50,23 +59,29 @@ export default function Home() {
       console.log('Redirecting to dashboard...');
       router.push(`/projects/${project.id}/dashboard`);
     } catch (error: any) {
-      console.error('Failed to create project:', {
-        name: error.name,
-        message: error.message,
-        stack: error.stack
-      });
-      alert(`Failed to create project: ${error.message}`);
+      console.error('Failed to create project:', error);
+      setError(error?.message || 'אירעה שגיאה ביצירת הפרויקט');
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setProjectData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Redirect to login if not authenticated
   useEffect(() => {
-    if (!user) {
+    if (!loading && !user) {
       router.push('/login');
     }
-  }, [user, router]);
+  }, [loading, user, router]);
 
+  // Show loading state while checking auth
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -75,46 +90,57 @@ export default function Home() {
     );
   }
 
+  // Only render the form if we have a user
   if (!user) {
     return null;
   }
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-12">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+      <div className="max-w-md w-full mx-auto space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             יצירת פרויקט חדש
-          </h1>
-          <p className="text-gray-600">
-            מלאו את הפרטים הבאים כדי להתחיל באיסוף הזכרונות
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            מלא את הפרטים הבאים כדי ליצור פרויקט חדש
           </p>
         </div>
+        
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+            <span className="block sm:inline">{error}</span>
+          </div>
+        )}
 
-        <form onSubmit={handleSubmit} className="space-y-6 bg-white p-8 rounded-lg shadow">
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="celebrantName" className="block text-sm font-medium text-gray-700">
-                שם בעל/ת השמחה
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="rounded-md shadow-sm -space-y-px">
+            <div className="mb-4">
+              <label htmlFor="celebrantName" className="block text-sm font-medium text-gray-700 mb-1">
+                שם החוגג/ת
               </label>
               <input
-                type="text"
                 id="celebrantName"
+                name="celebrantName"
+                type="text"
                 required
                 value={projectData.celebrantName}
-                onChange={(e) => setProjectData({ ...projectData, celebrantName: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                onChange={handleChange}
+                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="שם החוגג/ת"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                מין
+            <div className="mb-4">
+              <label htmlFor="celebrantGender" className="block text-sm font-medium text-gray-700 mb-1">
+                מגדר
               </label>
               <select
+                id="celebrantGender"
+                name="celebrantGender"
                 value={projectData.celebrantGender}
-                onChange={(e) => setProjectData({ ...projectData, celebrantGender: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                onChange={handleChange}
+                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
               >
                 <option value="male">זכר</option>
                 <option value="female">נקבה</option>
@@ -122,67 +148,76 @@ export default function Home() {
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
+            <div className="mb-4">
+              <label htmlFor="eventType" className="block text-sm font-medium text-gray-700 mb-1">
                 סוג האירוע
               </label>
               <select
+                id="eventType"
+                name="eventType"
                 value={projectData.eventType}
-                onChange={(e) => setProjectData({ ...projectData, eventType: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                onChange={handleChange}
+                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
               >
                 <option value="birthday">יום הולדת</option>
-                <option value="retirement">פרישה</option>
                 <option value="wedding">חתונה</option>
+                <option value="bar_mitzvah">בר מצווה</option>
+                <option value="bat_mitzvah">בת מצווה</option>
+                <option value="anniversary">יום נישואין</option>
                 <option value="other">אחר</option>
               </select>
             </div>
 
-            <div>
-              <label htmlFor="deadline" className="block text-sm font-medium text-gray-700">
-                תאריך יעד
+            <div className="mb-4">
+              <label htmlFor="deadline" className="block text-sm font-medium text-gray-700 mb-1">
+                תאריך האירוע (אופציונלי)
               </label>
               <input
-                type="date"
                 id="deadline"
-                required
+                name="deadline"
+                type="date"
                 value={projectData.deadline}
-                onChange={(e) => setProjectData({ ...projectData, deadline: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                onChange={handleChange}
+                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
               />
             </div>
 
-            <div>
-              <label htmlFor="managerName" className="block text-sm font-medium text-gray-700">
-                שם מנהל/ת הפרויקט
+            <div className="mb-4">
+              <label htmlFor="managerName" className="block text-sm font-medium text-gray-700 mb-1">
+                שם המנהל/ת (אופציונלי)
               </label>
               <input
-                type="text"
                 id="managerName"
-                required
+                name="managerName"
+                type="text"
                 value={projectData.managerName}
-                onChange={(e) => setProjectData({ ...projectData, managerName: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                onChange={handleChange}
+                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="שם המנהל/ת"
               />
             </div>
           </div>
 
-          <div className="flex justify-end">
+          <div>
             <button
               type="submit"
               disabled={isLoading}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${
+                isLoading ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'
+              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
             >
               {isLoading ? (
                 <>
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
+                  <span className="absolute left-0 inset-y-0 flex items-center pl-3">
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  </span>
                   יוצר פרויקט...
                 </>
               ) : (
-                'יצירת פרויקט'
+                'צור פרויקט'
               )}
             </button>
           </div>
