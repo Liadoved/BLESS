@@ -11,8 +11,8 @@ export default function GoogleSignIn() {
       console.log('Starting Google sign in...');
       console.log('Auth object:', auth);
       
-      if (!auth || typeof auth.signInWithPopup !== 'function') {
-        console.error('Auth is not properly initialized:', auth);
+      if (!auth) {
+        console.error('Auth is not initialized');
         throw new Error('מערכת האימות לא אותחלה כראוי. נסה לרענן את הדף.');
       }
 
