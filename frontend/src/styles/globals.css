@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  direction: rtl;
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --background: #ffffff;
+  --text: #1f2937;
+  --text-light: #6b7280;
+  --border: #e5e7eb;
+}
+
+body {
+  direction: rtl;
+  background: var(--background);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+.section-title {
+  @apply text-4xl font-bold text-gray-900 mb-2;
+  background: linear-gradient(120deg, #2563eb 0%, #1d4ed8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.section-subtitle {
+  @apply text-xl text-gray-600 max-w-2xl mx-auto;
+}
+
+.form-card {
+  @apply bg-white rounded-2xl shadow-lg p-8;
+  border: 1px solid var(--border);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
+
+.input-group {
+  @apply mb-6;
+}
+
+.input-label {
+  @apply block text-sm font-medium text-gray-700 mb-2;
+}
+
+.input-field {
+  @apply w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200;
+}
+
+.video-upload-area {
+  @apply border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center transition-all duration-200 hover:border-blue-500 hover:bg-blue-50;
+}
+
+.video-preview {
+  @apply rounded-2xl overflow-hidden bg-gray-100;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.btn-primary {
+  @apply inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white transition-all duration-200;
+  background: linear-gradient(120deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(120deg, #1d4ed8 0%, #1e40af 100%);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  @apply inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200;
+}
+
+.progress-steps {
+  @apply flex items-center justify-between mb-12;
+}
+
+.step-item {
+  @apply flex flex-col items-center;
+}
+
+.step-number {
+  @apply w-10 h-10 rounded-full flex items-center justify-center text-lg font-semibold mb-2;
+  background: linear-gradient(120deg, #2563eb 0%, #1d4ed8 100%);
+  color: white;
+}
+
+.step-text {
+  @apply text-sm font-medium text-gray-600;
+}
+
+.step-line {
+  @apply flex-1 h-0.5 bg-gray-200;
+}
+
+.step-active .step-number {
+  @apply ring-4 ring-blue-100;
+}
+
+.upload-icon {
+  @apply w-16 h-16 mx-auto mb-4 text-blue-500;
+}
+
+.success-message {
+  @apply flex items-center gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-lg mt-2;
+}
+
+.error-message {
+  @apply flex items-center gap-2 text-red-600 bg-red-50 px-4 py-2 rounded-lg mt-2;
+}
