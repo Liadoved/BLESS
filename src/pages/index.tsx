@@ -33,7 +33,7 @@ export default function Home() {
 
       console.log('Creating project...', projectData);
       // Create the project
-      const response = await fetch('/api/projects/create', {
+      const response = await fetch('/api/projects/new', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
