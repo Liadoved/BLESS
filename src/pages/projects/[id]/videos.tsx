@@ -60,7 +60,6 @@ export default function ProjectVideos() {
       const auth = getAuth();
       const user = auth.currentUser;
       if (!user) {
-        console.error('No user logged in');
         router.push('/login');
         return;
       }
@@ -78,9 +77,10 @@ export default function ProjectVideos() {
       }
 
       const data = await response.json();
-      setVideos(data);
-    } catch (error) {
+      setVideos(data.videos || []);
+    } catch (error: any) {
       console.error('Failed to fetch videos:', error);
+      alert(error?.message || 'Failed to fetch videos');
     }
   };
 
@@ -134,8 +134,9 @@ export default function ProjectVideos() {
       setVideos(prev => [...prev, newVideo]);
       setShowTrimmer(false);
       setCurrentVideo(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to upload video:', error);
+      alert(error?.message || 'Failed to upload video');
     } finally {
       setIsUploading(false);
     }
@@ -275,8 +276,9 @@ export default function ProjectVideos() {
                                   }
 
                                   setVideos(prev => prev.filter(v => v.id !== video.id));
-                                } catch (error) {
+                                } catch (error: any) {
                                   console.error('Failed to delete video:', error);
+                                  alert(error?.message || 'Failed to delete video');
                                 }
                               }}
                               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200"
@@ -336,8 +338,9 @@ export default function ProjectVideos() {
                   }
 
                   router.push(`/projects/${id}/thank-you`);
-                } catch (error) {
+                } catch (error: any) {
                   console.error('Failed to complete videos:', error);
+                  alert(error?.message || 'Failed to complete videos');
                 }
               }}
               className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"

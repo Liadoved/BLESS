@@ -108,7 +108,7 @@ export default function VideoForm() {
 
       setShowTrimmer(false);
       setCurrentVideo(null);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to handle video:', error);
       setError('Failed to upload video. Please try again.');
     }
@@ -154,9 +154,9 @@ export default function VideoForm() {
 
       // מעבר לדף תודה
       router.push(`/projects/${id}/share/thank-you`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to submit form:', error);
-      setError(error.message || 'Failed to submit form. Please try again.');
+      setError(error instanceof Error ? error.message : 'Failed to submit form. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

@@ -54,11 +54,12 @@ export default function ProjectDashboard() {
       setProject(projectData);
       setContacts(contactsData || []); 
       setStats(statsData);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch project data:', error);
-      if (error.message === 'No user logged in') {
+      if (error?.message === 'No user logged in') {
         router.push('/login');
       }
+      alert(error?.message || 'Failed to fetch project data');
     }
   };
 
@@ -92,8 +93,9 @@ export default function ProjectDashboard() {
       setContacts(prev => [...prev, newContactData]);
       setIsAddingContact(false);
       setNewContact({ name: '', phone: '', relation: '' });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to add contact:', error);
+      alert(error?.message || 'Failed to add contact');
     }
   };
 
@@ -121,8 +123,9 @@ export default function ProjectDashboard() {
         })
       });
       fetchProjectData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to send reminders:', error);
+      alert(error?.message || 'Failed to send reminders');
     }
   };
 
