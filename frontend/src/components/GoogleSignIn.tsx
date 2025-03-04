@@ -40,8 +40,19 @@ export default function GoogleSignIn() {
     } catch (error: any) {
       console.error('Error signing in with Google:', error);
       
-      // Show error message to user
-      alert(`התחברות נכשלה: ${error?.message || 'אירעה שגיאה בהתחברות'}`);
+      // יצירת הודעת שגיאה ידידותית למשתמש
+      let errorMessage = 'אירעה שגיאה בהתחברות';
+      
+      // בדיקה אם השגיאה היא דומיין לא מורשה
+      if (error?.code === 'auth/unauthorized-domain') {
+        errorMessage = 'הדומיין הנוכחי לא מורשה בהגדרות Firebase. אנא פנה למנהל המערכת להוספת הדומיין להגדרות Firebase Authentication.';
+        console.log('דומיין לא מורשה. יש להוסיף את הדומיין הנוכחי להגדרות Firebase Authentication > Settings > Authorized domains.');
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      // הצגת הודעת השגיאה למשתמש
+      alert(`התחברות נכשלה: ${errorMessage}`);
     }
   };
 
