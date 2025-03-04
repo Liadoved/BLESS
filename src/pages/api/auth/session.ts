@@ -1,13 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { auth } from '../../../lib/firebase';
+import { getAuth } from 'firebase-admin/auth';
+import { getFirebaseAdminApp } from '../../../lib/firebase-admin';
 
-// Helper function to ensure auth is initialized
-const getAuth = () => {
-  if (!auth) {
-    throw new Error('Auth is not initialized');
-  }
-  return auth;
-};
+// Initialize Firebase Admin
+getFirebaseAdminApp();
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -20,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // Verify the ID token
+    // Verify the ID token using Admin SDK
     const decodedToken = await getAuth().verifyIdToken(idToken);
 
     // Return the user information
