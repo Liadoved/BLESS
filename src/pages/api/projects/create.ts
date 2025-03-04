@@ -5,19 +5,31 @@ import { getFirestore } from 'firebase-admin/firestore';
 
 // Initialize Firebase Admin if it hasn't been initialized yet
 if (!getApps().length) {
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
-  if (!privateKey) {
-    throw new Error('FIREBASE_PRIVATE_KEY is not set');
-  }
+  try {
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+    if (!privateKey) {
+      throw new Error('FIREBASE_PRIVATE_KEY is not set');
+    }
 
-  const app = initializeApp({
-    credential: cert({
-      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      // Convert escaped newlines to actual newlines
-      privateKey: privateKey.replace(/\\n/g, '\n')
-    })
-  });
+    // Remove quotes and convert escaped newlines to actual newlines
+    const formattedKey = privateKey
+      .replace(/"/g, '')
+      .replace(/\\n/g, '\n')
+      .trim();
+
+    console.log('Initializing Firebase Admin SDK...');
+    initializeApp({
+      credential: cert({
+        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: formattedKey
+      })
+    });
+    console.log('Firebase Admin SDK initialized successfully');
+  } catch (error) {
+    console.error('Error initializing Firebase Admin:', error);
+    throw error;
+  }
 }
 
 const adminAuth = getAuth();
