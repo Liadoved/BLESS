@@ -3,6 +3,16 @@ import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  // Handle OPTIONS method for CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -33,7 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const projectData = projectDoc.data();
-    if (projectData?.managerId !== userId) {
+    if (projectData?.createdBy !== userId) {
       return res.status(403).json({ error: 'Not authorized to access this project' });
     }
 
@@ -70,7 +80,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.error('Error fetching stats:', error);
     return res.status(500).json({ 
       error: 'Failed to fetch stats',
-      details: error.message 
+      details: error?.message 
     });
   }
 }
