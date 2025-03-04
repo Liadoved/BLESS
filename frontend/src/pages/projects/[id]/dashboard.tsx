@@ -171,7 +171,7 @@ export default function ProjectDashboard() {
               </div>
               <div className="bg-purple-50 rounded-lg p-4 shadow">
                 <h3 className="text-lg font-semibold text-purple-800 mb-2">מגדר</h3>
-                <p className="text-gray-700">{project.gender === 'male' ? 'זכר' : 'נקבה'}</p>
+                <p className="text-gray-700">{project.celebrantGender === 'male' ? 'זכר' : 'נקבה'}</p>
               </div>
             </div>
             
