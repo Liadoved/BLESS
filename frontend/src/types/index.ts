@@ -64,11 +64,15 @@ export interface VideoQuestion {
 
 // Project Statistics
 export interface ProjectStats {
-  totalImages: number;
-  totalVideos: number;
-  pendingContacts: number;
-  completedContacts: number;
-  daysUntilDeadline: number;
+  totalContacts: number;
+  totalResponses: number;
+  lastUpdated: string;
+  // שמירה על שדות אופציונליים שאולי ישמשו בעתיד
+  totalImages?: number;
+  totalVideos?: number;
+  pendingContacts?: number;
+  completedContacts?: number;
+  daysUntilDeadline?: number;
 }
 
 // User Session
