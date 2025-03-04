@@ -1,5 +1,5 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
-import { getAuth, Auth } from 'firebase/auth';
+import { getAuth, Auth, connectAuthEmulator } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
 
@@ -21,17 +21,38 @@ let storage: FirebaseStorage;
 
 // Check if we're in the browser
 if (typeof window !== 'undefined') {
-  if (!getApps().length) {
-    app = initializeApp(firebaseConfig);
-  } else {
-    app = getApps()[0];
+  try {
+    if (!getApps().length) {
+      console.log('Initializing Firebase app...');
+      app = initializeApp(firebaseConfig);
+    } else {
+      console.log('Using existing Firebase app...');
+      app = getApps()[0];
+    }
+    
+    console.log('Getting Firebase auth...');
+    auth = getAuth(app);
+    console.log('Auth initialized:', !!auth);
+    
+    db = getFirestore(app);
+    storage = getStorage(app);
+    
+    // Enable Firebase Auth emulator if in development
+    if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === 'true') {
+      console.log('Connecting to Firebase Auth emulator...');
+      connectAuthEmulator(auth, 'http://localhost:9099');
+    }
+  } catch (error) {
+    console.error('Error initializing Firebase:', error);
+    // Create dummy objects to prevent crashes
+    app = {} as FirebaseApp;
+    auth = {} as Auth;
+    db = {} as Firestore;
+    storage = {} as FirebaseStorage;
   }
-  
-  auth = getAuth(app);
-  db = getFirestore(app);
-  storage = getStorage(app);
 } else {
   // Server-side - create dummy objects to prevent errors
+  console.log('Server-side Firebase initialization with dummy objects');
   app = {} as FirebaseApp;
   auth = {} as Auth;
   db = {} as Firestore;
